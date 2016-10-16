@@ -4,7 +4,9 @@ import sys
 import time
 import json
 import signal
+import getpass
 import requests
+import argparse
 from requests.packages.urllib3.exceptions import InsecureRequestWarning  # Suppress insecure ssl warnings
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)       # Suppress insecure ssl warnings
 
@@ -70,7 +72,16 @@ class Scanner(object):
         return 'https://{}:{}{}'.format(self.nessus_ip, self.nessus_port, path)
 
 def main(argv):
-    scan = Scanner('127.0.0.1', '8834', 'nessus', '')
+    parser = argparse.ArgumentParser(description='Download Nessus scans.')
+    parser.add_argument('-u', '--user', help='Nessus user instead of API key (password prompt will occur)', required=True)
+    parser.add_argument('-s', '--server', help='IP address of Nessus server', default='127.0.0.1')
+    parser.add_argument('-p', '--port', help='port number of Nessus server', default='8834')
+    parser.add_argument('-f', '--format', help='report format', choices=['nessus', 'html', 'csv', 'pdf'], nargs='+', default='csv')
+    args = parser.parse_args()
+
+    passwd = getpass.getpass('Password:')
+
+    scan = Scanner(args.server, args.port, args.user, passwd)
     scan.connect()
     
     ## List Scans
@@ -106,10 +117,9 @@ def main(argv):
         print('One or more the the inputted values are invalid')
 
     # Download Scans
-    scan.download_scans(scan.scans, 'csv')
-    scan.download_scans(scan.scans, 'pdf')
-    scan.download_scans(scan.scans, 'html')
-    
+    for f in args.format:
+        scan.download_scans(scan.scans, f)
+
     scan.disconnect()
 
 def signal_handler(signal, frame):
