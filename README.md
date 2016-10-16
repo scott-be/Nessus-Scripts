@@ -26,4 +26,5 @@ Specify the username/password and IP/port of the nessus server. One or more outp
 	                        report format
 
 ### TODO
-[ ] Add better error handling
+
+ - [ ] Better error handling
